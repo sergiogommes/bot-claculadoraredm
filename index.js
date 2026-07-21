@@ -21,7 +21,7 @@ const client = new Client({
 client.once('ready', async () => {
     console.log(`Bot online como ${client.user.tag}!`);
 
-    // Registrando o novo comando slash /calcular
+    // Registrando o comando /calcular aceitando expressão na quantidade
     const commands = [
         new SlashCommandBuilder()
             .setName('calcular')
@@ -30,9 +30,9 @@ client.once('ready', async () => {
                 option.setName('produto')
                     .setDescription('Nome ou descrição do produto (ex: Leite)')
                     .setRequired(true))
-            .addNumberOption(option =>
+            .addStringOption(option =>
                 option.setName('quantidade')
-                    .setDescription('Quantidade de unidades')
+                    .setDescription('Quantidade (ex: 1+1+10 ou 5*2)')
                     .setRequired(true))
             .addNumberOption(option =>
                 option.setName('valor_unitario')
@@ -60,11 +60,19 @@ client.on('interactionCreate', async interaction => {
 
     if (interaction.commandName === 'calcular') {
         const produto = interaction.options.getString('produto');
-        const quantidade = interaction.options.getNumber('quantidade');
+        const qtdTexto = interaction.options.getString('quantidade');
         const valor_unitario = interaction.options.getNumber('valor_unitario');
 
-        if (quantidade <= 0 || valor_unitario <= 0) {
-            return await interaction.reply({ content: 'A quantidade e o valor unitário precisam ser maiores que zero!', ephemeral: true });
+        let quantidade;
+        try {
+            // Avalia a expressão matemática digitada (ex: "1+1+10+10") com segurança básica
+            quantidade = Function(`'use strict'; return (${qtdTexto})`)();
+        } catch (e) {
+            return await interaction.reply({ content: 'A quantidade informada é inválida! Use apenas números e operações (ex: 1+1+10).', ephemeral: true });
+        }
+
+        if (isNaN(quantidade) || quantidade <= 0 || valor_unitario <= 0) {
+            return await interaction.reply({ content: 'A quantidade e o valor unitário precisam resultar em um valor maior que zero!', ephemeral: true });
         }
 
         // Fazendo o cálculo automático
@@ -74,7 +82,7 @@ client.on('interactionCreate', async interaction => {
         await interaction.reply(
             `📊 **Cálculo de Venda**\n` +
             `• Produto: **${produto}**\n` +
-            `• Quantidade: **${quantidade}**\n` +
+            `• Quantidade: **${quantidade}** (${qtdTexto})\n` +
             `• Valor unitário: **R$ ${valor_unitario.toFixed(2)}**\n` +
             `• Total a receber: **R$ ${total.toFixed(2)}**`
         );
