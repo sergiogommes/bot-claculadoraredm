@@ -1,5 +1,5 @@
 const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } = require('discord.js');
-const http = require('http');
+const http = http = require('http');
 require('dotenv').config();
 
 const server = http.createServer((req, res) => {
