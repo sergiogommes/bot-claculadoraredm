@@ -1,5 +1,18 @@
 const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } = require('discord.js');
+const http = require('http');
 
+// Cria um servidor HTTP simples para satisfazer a exigência de porta do Render
+const server = http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('Bot online!\n');
+});
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
+});
+
+// Configuração do Bot do Discord
 const client = new Client({
     intents: [GatewayIntentBits.Guilds]
 });
