@@ -31,7 +31,7 @@ client.once('ready', async () => {
                     .setRequired(true))
             .addStringOption(option =>
                 option.setName('quantidade')
-                    .setDescription('Quantidade (ex: 1+1+10 ou 5*2)')
+                    .setDescription('Quantidade ou soma (ex: 1+1+10 ou 10)')
                     .setRequired(true))
             .addNumberOption(option =>
                 option.setName('valor_unitario')
@@ -64,11 +64,14 @@ client.on('interactionCreate', async interaction => {
 
         let quantidade = 0;
         try {
-            // Remove espaços e calcula somas e multiplicações básicas com segurança
-            const sanitized = qtdTexto.replace(/[^0-9+\-*/.]/g, '');
-            quantidade = Function(`'use strict'; return (${sanitized})`)();
+            // Soma automática segura separando pelos sinais de mais (+)
+            const partes = qtdTexto.split('+').map(num => parseFloat(num.trim()));
+            if (partes.some(isNaN)) {
+                throw new Error('Valor inválido');
+            }
+            quantidade = partes.reduce((soma, atual) => soma + atual, 0);
         } catch (e) {
-            return await interaction.reply({ content: 'A quantidade informada é inválida! Use apenas números e operações (ex: 1+1+10).', ephemeral: true });
+            return await interaction.reply({ content: 'Use apenas números somados com mais (ex: 1+1+10).', ephemeral: true });
         }
 
         if (isNaN(quantidade) || quantidade <= 0 || valor_unitario <= 0) {
