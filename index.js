@@ -21,7 +21,6 @@ const client = new Client({
 client.once('ready', async () => {
     console.log(`Bot online como ${client.user.tag}!`);
 
-    // Registrando o comando /calcular aceitando expressão na quantidade
     const commands = [
         new SlashCommandBuilder()
             .setName('calcular')
@@ -63,10 +62,11 @@ client.on('interactionCreate', async interaction => {
         const qtdTexto = interaction.options.getString('quantidade');
         const valor_unitario = interaction.options.getNumber('valor_unitario');
 
-        let quantidade;
+        let quantidade = 0;
         try {
-            // Avalia a expressão matemática digitada (ex: "1+1+10+10") com segurança básica
-            quantidade = Function(`'use strict'; return (${qtdTexto})`)();
+            // Remove espaços e calcula somas e multiplicações básicas com segurança
+            const sanitized = qtdTexto.replace(/[^0-9+\-*/.]/g, '');
+            quantidade = Function(`'use strict'; return (${sanitized})`)();
         } catch (e) {
             return await interaction.reply({ content: 'A quantidade informada é inválida! Use apenas números e operações (ex: 1+1+10).', ephemeral: true });
         }
@@ -75,10 +75,8 @@ client.on('interactionCreate', async interaction => {
             return await interaction.reply({ content: 'A quantidade e o valor unitário precisam resultar em um valor maior que zero!', ephemeral: true });
         }
 
-        // Fazendo o cálculo automático
         const total = quantidade * valor_unitario;
 
-        // Enviando a resposta formatada
         await interaction.reply(
             `📊 **Cálculo de Venda**\n` +
             `• Produto: **${produto}**\n` +
