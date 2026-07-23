@@ -2,18 +2,16 @@ const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } = require
 const http = require('http');
 require('dotenv').config();
 
-// Servidor HTTP simples para o Render não desligar o bot
 const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('Bot do RedM esta online!\n');
+    res.end('Bot online!\n');
 });
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`Servidor web rodando na porta ${PORT}`);
+    console.log(`Servidor rodando na porta ${PORT}`);
 });
 
-// Configuração do cliente do bot
 const client = new Client({
     intents: [GatewayIntentBits.Guilds]
 });
@@ -27,11 +25,11 @@ client.once('ready', async () => {
             .setDescription('Calcula o valor total de um produto ou colheita.')
             .addStringOption(option =>
                 option.setName('produto')
-                    .setDescription('Nome ou descrição do produto (ex: Leite)')
+                    .setDescription('Nome ou descrição do produto')
                     .setRequired(true))
             .addStringOption(option =>
                 option.setName('quantidade')
-                    .setDescription('Quantidade ou soma (ex: 1+1+10 ou 10)')
+                    .setDescription('Quantidade ou soma (ex: 1+1+10)')
                     .setRequired(true))
             .addNumberOption(option =>
                 option.setName('valor_unitario')
@@ -42,7 +40,6 @@ client.once('ready', async () => {
     const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 
     try {
-        console.log('Atualizando comandos de barra do bot...');
         await rest.put(
             Routes.applicationCommands(client.user.id),
             { body: commands },
@@ -53,7 +50,6 @@ client.once('ready', async () => {
     }
 });
 
-// Ação executada quando alguém usa o comando
 client.on('interactionCreate', async interaction => {
     if (!interaction.isChatInputCommand()) return;
 
@@ -64,18 +60,15 @@ client.on('interactionCreate', async interaction => {
 
         let quantidade = 0;
         try {
-            // Soma automática segura separando pelos sinais de mais (+)
             const partes = qtdTexto.split('+').map(num => parseFloat(num.trim()));
-            if (partes.some(isNaN)) {
-                throw new Error('Valor inválido');
-            }
+            if (partes.some(isNaN)) throw new Error();
             quantidade = partes.reduce((soma, atual) => soma + atual, 0);
         } catch (e) {
             return await interaction.reply({ content: 'Use apenas números somados com mais (ex: 1+1+10).', ephemeral: true });
         }
 
         if (isNaN(quantidade) || quantidade <= 0 || valor_unitario <= 0) {
-            return await interaction.reply({ content: 'A quantidade e o valor unitário precisam resultar em um valor maior que zero!', ephemeral: true });
+            return await interaction.reply({ content: 'A quantidade e o valor unitário precisam ser maiores que zero!', ephemeral: true });
         }
 
         const total = quantidade * valor_unitario;
